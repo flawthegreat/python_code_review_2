@@ -22,7 +22,10 @@ def show_help():
 
 
 def start_new_session(server_address: str) -> int:
-    response = requests.post(f'{server_address}/start_new_session').json()
+    try:
+        response = requests.post(f'{server_address}/start_new_session').json()
+    except:
+        connection_error()
 
     if response['status'] != 'ok':
         print('An error has occured during session creation:')
@@ -33,9 +36,12 @@ def start_new_session(server_address: str) -> int:
 
 
 def terminate_session(server_address: str, session_id: int):
-    response = requests.post(f'{server_address}/terminate_session', params={
-        'session_id': session_id,
-    }).json()
+    try:
+        response = requests.post(f'{server_address}/terminate_session', params={
+            'session_id': session_id,
+        }).json()
+    except:
+        connection_error()
 
     if response['status'] != 'ok':
         print('Could not terminate session:')
@@ -50,11 +56,14 @@ def generate_code(
     data: str,
     image_filepath: str
 ):
-    response = requests.get(f'{server_address}/generate_code', params={
-        'session_id': session_id,
-        'code_type': code_type,
-        'data': data,
-    }).json()
+    try:
+        response = requests.get(f'{server_address}/generate_code', params={
+            'session_id': session_id,
+            'code_type': code_type,
+            'data': data,
+        }).json()
+    except:
+        connection_error()
 
     if response['status'] != 'ok':
         print('Could not generate code:')
@@ -75,14 +84,17 @@ def read_code(
     with open(image_filepath, 'rb') as image_file:
         image_data = image_file.read()
 
-        response = requests.get(
-            f'{server_address}/read_code',
-            params={
-                'session_id': session_id,
-                'code_type': code_type,
-                'image_data': base64.b64encode(image_data).decode('utf-8')
-            }
-        ).json()
+        try:
+            response = requests.get(
+                f'{server_address}/read_code',
+                params={
+                    'session_id': session_id,
+                    'code_type': code_type,
+                    'image_data': base64.b64encode(image_data).decode('utf-8')
+                }
+            ).json()
+        except:
+            connection_error()
 
         if response['status'] != 'ok':
             print('Could not read code:')
@@ -93,12 +105,15 @@ def read_code(
 
 
 def get_history(server_address: str, session_id: int) -> str:
-    response = requests.get(
-        f'{server_address}/get_history',
-        params={
-            'session_id': session_id,
-        }
-    ).json()
+    try:
+        response = requests.get(
+            f'{server_address}/get_history',
+            params={
+                'session_id': session_id,
+            }
+        ).json()
+    except:
+        connection_error()
 
     if response['status'] != 'ok':
         print('Could not get history:')
@@ -109,12 +124,15 @@ def get_history(server_address: str, session_id: int) -> str:
 
 
 def clear_history(server_address: str, session_id: int):
-    response = requests.post(
-        f'{server_address}/clear_history',
-        params={
-            'session_id': session_id,
-        }
-    ).json()
+    try:
+        response = requests.post(
+            f'{server_address}/clear_history',
+            params={
+                'session_id': session_id,
+            }
+        ).json()
+    except:
+        connection_error()
 
     if response['status'] != 'ok':
         print('Could not clear history:')
@@ -145,6 +163,11 @@ def parse_server_address() -> str:
     arguments = parser.parse_args()
 
     return f'http://{arguments.host}:{arguments.port}'
+
+
+def connection_error():
+    print('Could not connect to server')
+    exit()
 
 
 def main():

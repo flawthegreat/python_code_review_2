@@ -8,10 +8,10 @@ import string
 
 
 class CodeType(Enum):
-    qr = 'qr'
-    code39 = 'code39'
-    code128 = 'code128'
-    ean = 'ean'
+    QR = 'qr'
+    CODE39 = 'code39'
+    CODE128 = 'code128'
+    EAN = 'ean'
 
 
 class CodeManager:
@@ -21,12 +21,12 @@ class CodeManager:
     def generate(code_type: CodeType, data: str) -> bytes:
         byte_array = io.BytesIO()
 
-        if code_type == CodeType.qr:
+        if code_type == CodeType.QR:
             image = qrcode.make(data)
             image.save(byte_array, format='PNG')
-        elif code_type == CodeType.code39 or \
-                code_type == CodeType.code128 or \
-                code_type == CodeType.ean:
+        elif code_type == CodeType.CODE39 or \
+                code_type == CodeType.CODE128 or \
+                code_type == CodeType.EAN:
             code = barcode.get_barcode_class(code_type.value)
             image = code(data, writer=barcode.writer.ImageWriter())
             image.write(byte_array)
@@ -51,15 +51,19 @@ class CodeManager:
         if len(data) > cls.__MAX_DATA_SIZE:
             return False
 
-        if code_type == CodeType.qr or code_type == CodeType.code128:
-            return set(data).issubset(set(string.printable))
-        elif code_type == CodeType.code39:
+        if code_type == CodeType.QR or code_type == CodeType.CODE128:
+            for char in data:
+                if char not in string.printable:
+                    return False
+
+            return True
+        elif code_type == CodeType.CODE39:
             return set(data).issubset(set(
                 string.ascii_uppercase +
                 string.digits +
                 '-.$/+% '
             ))
-        elif code_type == CodeType.ean:
+        elif code_type == CodeType.EAN:
             return set(data).issubset(set(string.digits)) and len(data) == 12
         else:
             raise NotImplementedError(f'Unsupported code type: {code_type}')
