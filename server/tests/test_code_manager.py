@@ -7,7 +7,6 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(
 sys.path.insert(0, parentdir) 
 
 import unittest
-from session_manager import Request, SessionManager
 from code_manager import CodeType, CodeManager
 import io
 import string
