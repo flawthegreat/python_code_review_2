@@ -15,32 +15,28 @@ import PIL
 
 class TestCodeManager(unittest.TestCase):
     def test_generate(self):
-        for code_type, data in zip(
-            [CodeType.QR, CodeType.CODE39, CodeType.CODE128, CodeType.EAN],
-            ['jabka', 'JABKA', 'small jabka', '012345678901']
-        ):
-            image_data = CodeManager.generate(code_type, data)
-            self.assertEqual(
-                PIL.Image.open(io.BytesIO(image_data)).format,
-                'PNG'
-            )
+        for code_type, data in [
+            (CodeType.QR, 'jabka'), (CodeType.CODE39, 'JABKA'),
+            (CodeType.CODE128, 'small jabka'), (CodeType.EAN, '012345678901')
+        ]:
+            image_data = io.BytesIO(CodeManager.generate(code_type, data))
+            self.assertEqual(PIL.Image.open(image_data).format, 'PNG')
 
     def test_read(self):
-        for image_file, data in zip(
-            ['test_qr.png', 'test_code39.png', 'test_code128.png',
-                'test_ean.png'],
-            ['jabka', 'JABKAR', 'big jabka', '1875904582766']
-        ):
+        for image_file, data in [
+            ('test_qr.png', 'jabka'), ('test_code39.png', 'JABKAR'),
+            ('test_code128.png', 'big jabka'), ('test_ean.png', '1875904582766')
+        ]:
             with open(image_file, 'rb') as image_data:
                 self.assertEqual(CodeManager.read(image_data.read()), data)
 
         self.assertEqual(CodeManager.read(b'stupid data'), '')
 
     def test_coding_correctness(self):
-        for code_type, data in zip(
-            [CodeType.QR, CodeType.CODE39, CodeType.CODE128, CodeType.EAN],
-            ['jabka', 'JABKA', 'huge jabka', '012345678901']
-        ):
+        for code_type, data in [
+            (CodeType.QR, 'jabka'), (CodeType.CODE39, 'JABKA'),
+            (CodeType.CODE128, 'huge jabka'), (CodeType.EAN, '012345678901')
+        ]:
             image_data = CodeManager.generate(code_type, data)
             decoded_data = (
                 CodeManager.read(image_data)[:-1]
@@ -50,18 +46,23 @@ class TestCodeManager(unittest.TestCase):
             self.assertEqual(decoded_data, data)
 
     def test_data_is_correct(self):
-        for code_type, data, result in zip(
-            [CodeType.QR, CodeType.QR, CodeType.CODE128,
-                CodeType.CODE128, CodeType.CODE39, CodeType.CODE39,
-                CodeType.CODE39, CodeType.EAN, CodeType.EAN, CodeType.EAN,
-                CodeType.EAN],
-            [string.printable, 'жабка', string.printable, 'жабка',
+        for code_type, data, result in [
+            (CodeType.QR, string.printable, True),
+            (CodeType.QR, 'жабка', False),
+            (CodeType.CODE128, string.printable, True),
+            (CodeType.CODE128, 'жабка', False),
+            (
+                CodeType.CODE39,
                 'STUPID CODE1245876-.$/+%' + string.ascii_uppercase,
-                'even more stupid code', ':^)', '012345678901', '01234567890',
-                '0123456789012', 'abc'],
-            [True, False, True, False, True, False, False, True, False, False,
-                False]
-        ):
+                True    
+            ),
+            (CodeType.CODE39, 'even more stupid code', False),
+            (CodeType.CODE39, ':^)', False),
+            (CodeType.EAN, '012345678901', True),
+            (CodeType.EAN, '01234567890', False),
+            (CodeType.EAN, '0123456789012', False),
+            (CodeType.EAN, 'abc', False)
+        ]:
             self.assertEqual(
                 CodeManager.data_is_correct(code_type, data),
                 result
