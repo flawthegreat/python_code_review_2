@@ -170,6 +170,48 @@ def connection_error():
     exit()
 
 
+def process_generate_command(server_address: str, session_id: int):
+    code_type = input(
+        f'Enter code type [{"/".join(CODE_TYPES)}]:\n'
+    )
+    if code_type not in CODE_TYPES:
+        print('Invalid code type')
+        return
+
+    print('Enter data to encode:')
+    data = str(sys.stdin.read())
+
+    filepath = input('\nEnter code filepath:\n')
+
+    generate_code(
+        server_address,
+        session_id,
+        code_type,
+        data,
+        filepath
+    )
+
+
+def process_read_command(server_address: str, session_id: int):
+    code_type = input(
+        f'Enter code type [{"/".join(CODE_TYPES)}]:\n'
+    )
+    if code_type not in CODE_TYPES:
+        print('Invalid code type')
+        return
+
+    image_filepath = input('Enter code image filepath:\n')
+
+    code_data = read_code(
+        server_address,
+        session_id,
+        code_type,
+        image_filepath
+    )
+    if code_data:
+        print(code_data)
+
+
 def main():
     server_address = parse_server_address()
     session_id = start_new_session(server_address)
@@ -183,43 +225,9 @@ def main():
             if command_name == 'help':
                 show_help()
             elif command_name == 'generate':
-                code_type = input(
-                    f'Enter code type [{"/".join(CODE_TYPES)}]:\n'
-                )
-                if code_type not in CODE_TYPES:
-                    print('Invalid code type')
-                    continue
-
-                print('Enter data to encode:')
-                data = str(sys.stdin.read())
-
-                filepath = input('\nEnter code filepath:\n')
-
-                generate_code(
-                    server_address,
-                    session_id,
-                    code_type,
-                    data,
-                    filepath
-                )
+                process_generate_command(server_address, session_id)
             elif command_name == 'read':
-                code_type = input(
-                    f'Enter code type [{"/".join(CODE_TYPES)}]:\n'
-                )
-                if code_type not in CODE_TYPES:
-                    print('Invalid code type')
-                    continue
-
-                image_filepath = input('Enter code image filepath:\n')
-
-                code_data = read_code(
-                    server_address,
-                    session_id,
-                    code_type,
-                    image_filepath
-                )
-                if code_data:
-                    print(code_data)
+                process_read_command(server_address, session_id)
             elif command_name == 'history':
                 history = get_history(server_address, session_id)
                 if history:
